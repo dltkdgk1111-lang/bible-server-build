@@ -1,0 +1,10 @@
+{
+	"id": "local-bible-popup",
+	"name": "Local Bible Popup",
+	"version": "1.0.2",
+	"minAppVersion": "0.15.0",
+	"description": "성경 구절 팝업 (스마트 위치 + 줄바꿈 지원)",
+	"author": "Sangha Lee",
+	"authorUrl": "",
+	"isDesktopOnly": true
+}
