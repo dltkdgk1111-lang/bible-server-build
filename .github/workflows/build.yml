@@ -1,12 +1,17 @@
-name: Build and Rename to TXT
+name: Build EXE and Push to Repo
 
 on:
   push:
-    branches: [ "main" ]  # main에 코드가 올라오면 작동
-  workflow_dispatch:      # 수동 실행 가능
+    paths:
+      - 'main.py'      # main.py가 수정될 때만 작동
+      - 'bible.json'   # 혹은 데이터가 수정될 때
+  workflow_dispatch:   # 수동 실행 가능
+
+permissions:
+  contents: write      # 로봇에게 '파일 쓰기' 권한 부여 (중요!)
 
 jobs:
-  build-windows:
+  build-and-push:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
@@ -25,15 +30,16 @@ jobs:
     - name: Build EXE
       run: pyinstaller --onefile --noconsole --name "bible-server-win" main.py
 
-    # 2. [꼼수] .exe를 .txt로 이름 바꾸기 (보안 우회용)
-    - name: Rename EXE to TXT
+    # 2. dist 폴더에 있는 exe를 밖으로 꺼내면서 txt로 이름 바꾸기
+    - name: Move and Rename
       run: |
-        cd dist
-        Rename-Item -Path "bible-server-win.exe" -NewName "bible-server-win.txt"
+        Move-Item -Path "dist/bible-server-win.exe" -Destination "bible-server-win.txt" -Force
 
-    # 3. 결과물 업로드 (이제 txt 파일이 올라감)
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: bible-server-win-txt
-        path: dist/bible-server-win.txt
+    # 3. [핵심] 깃허브 저장소에 자동 업로드 (Commit & Push)
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "actions@github.com"
+        git add bible-server-win.txt
+        git commit -m "Auto-build: Update bible-server-win.txt" || echo "No changes to commit"
+        git push
